@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Botanical Archive 🌿</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --leaf-dark: #2d6a4f;
+            --leaf-medium: #52b788;
+            --sage-bg: #f8fcf9;
+            --paper-color: #ffffff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: var(--sage-bg);
+            background-image: linear-gradient(135deg, #f8fcf9 0%, #d8f3dc 100%);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            color: #1b4332;
+            overflow: hidden;
+        }
+
+        /* --- ANIMASI DAUN --- */
+        .falling-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999;
+        }
+        .leaf-fall { position: absolute; opacity: 0.4; animation: fall linear forwards; }
+        @keyframes fall {
+            from { transform: translateY(-10vh) rotate(0deg); }
+            to { transform: translateY(110vh) rotate(360deg); }
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(45, 106, 79, 0.1);
+            display: flex;
+            flex-direction: column;
+            padding: 40px 25px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            text-align: left;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--leaf-dark);
+            transition: 0.3s;
+        }
+
+        .nav-btn.active, .nav-btn:hover {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex: 1;
+            padding: 40px 20px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        /* --- TAMPILAN KERTAS --- */
+        .paper-stack {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--paper-color);
+            padding: 60px;
+            border-radius: 2px;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1), 0 10px 0 -5px #eee, 0 20px 0 -10px #eee;
+            min-height: 90vh;
+            border-top: 8px solid var(--leaf-medium);
+        }
+
+        #noteTitleInput {
+            width: 100%;
+            border: none;
+            font-family: 'Playfair Display', serif;
+            font-size: 35px;
+            margin-bottom: 20px;
+            outline: none;
+            color: var(--leaf-dark);
+        }
+
+        #editorArea {
+            width: 100%;
+            min-height: 400px;
+            border: none;
+            outline: none;
+            font-size: 18px;
+            line-height: 1.8;
+            color: #444;
+            resize: none;
+            background-image: linear-gradient(#f1f1f1 1px, transparent 1px);
+            background-size: 100% 1.8em;
+        }
+
+        /* --- LIST JURNAL --- */
+        .archive-grid {
+            max-width: 850px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+
+        .note-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            border-left: 5px solid var(--leaf-medium);
+            transition: 0.3s;
+        }
+
+        .note-card:hover { transform: translateX(10px); background: #f0f7f2; }
+
+        /* --- UI LAINNYA --- */
+        .save-btn {
+            position: fixed; bottom: 40px; right: 40px;
+            background: var(--leaf-dark);
+            color: white; border: none; padding: 15px 35px;
+            border-radius: 30px; cursor: pointer;
+            box-shadow: 0 10px 20px rgba(45, 106, 79, 0.3);
+            font-weight: bold; z-index: 1000;
+        }
+
+        .spotify-container {
+            position: fixed; bottom: 30px; left: 30px;
+            width: 250px; height: 80px; z-index: 1000;
+            border-radius: 12px; overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="falling-container" id="leafContainer"></div>
+
+    <div class="sidebar">
+        <h2 style="font-family: 'Playfair Display'; color: var(--leaf-dark);">🌿 Botanical</h2>
+        <button class="nav-btn active" id="btnWrite" onclick="showSection('write')">🖋️ Writing Mode</button>
+        <button class="nav-btn" id="btnArchive" onclick="showSection('archive')">📖 My Archive</button>
+        <div style="margin-top: auto; font-size: 11px; opacity: 0.5;">Saved locally on your browser.</div>
+    </div>
+
+    <div class="main-content">
+        <div id="pageWrite">
+            <div class="paper-stack">
+                <input type="text" id="noteTitleInput" placeholder="A New Chapter...">
+                <textarea id="editorArea" placeholder="Start typing your story..."></textarea>
+            </div>
+        </div>
+
+        <div id="pageArchive" style="display: none;">
+            <h1 style="font-family: 'Playfair Display'; text-align: center;">The Archive</h1>
+            <div class="archive-grid" id="archiveGrid">
+                </div>
+        </div>
+    </div>
+
+    <div class="spotify-container" style="height: 100px; width: 300px; background: #000; border-radius: 15px; border: 2px solid var(--leaf-medium);">
+    <iframe 
+        width="100%" 
+        height="100" 
+        src="https://www.youtube.com/embed/jfKfPfyJRdk?controls=1&showinfo=0&rel=0&autoplay=0" 
+        title="Lagu Santai Viral Tiktok 2026" 
+        frameborder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+        allowfullscreen>
+    </iframe>
+    </div>
+    <button class="save-btn" id="saveBtn" onclick="saveNote()">SAVE JOURNAL 🍃</button>
+
+    <script>
+        let currentNoteId = null;
+
+        // Navigasi
+        function showSection(section) {
+            if(section === 'write') {
+                document.getElementById('pageWrite').style.display = 'block';
+                document.getElementById('pageArchive').style.display = 'none';
+                document.getElementById('saveBtn').style.display = 'block';
+                document.getElementById('btnWrite').classList.add('active');
+                document.getElementById('btnArchive').classList.remove('active');
+            } else {
+                document.getElementById('pageWrite').style.display = 'none';
+                document.getElementById('pageArchive').style.display = 'block';
+                document.getElementById('saveBtn').style.display = 'none';
+                document.getElementById('btnWrite').classList.remove('active');
+                document.getElementById('btnArchive').classList.add('active');
+                renderArchive();
+            }
+        }
+
+        // Simpan ke LocalStorage
+        function saveNote() {
+            const title = document.getElementById('noteTitleInput').value || "Untitled";
+            const content = document.getElementById('editorArea').value;
+
+            if(!content) { alert("Write something before saving! 🌿"); return; }
+
+            let notes = JSON.parse(localStorage.getItem('botanical_journal')) || [];
+
+            if(currentNoteId) {
+                notes = notes.map(n => n.id === currentNoteId ? {...n, title, content} : n);
+            } else {
+                notes.unshift({
+                    id: Date.now(),
+                    title: title,
+                    content: content,
+                    date: new Date().toLocaleDateString('en-GB')
+                });
+            }
+
+            localStorage.setItem('botanical_journal', JSON.stringify(notes));
+            alert("Entry saved to archive! 🍃");
+            
+            // Reset & Pindah ke Archive
+            currentNoteId = null;
+            document.getElementById('noteTitleInput').value = '';
+            document.getElementById('editorArea').value = '';
+            showSection('archive');
+        }
+
+        // Tampilkan Daftar Catatan
+        function renderArchive() {
+            const grid = document.getElementById('archiveGrid');
+            const notes = JSON.parse(localStorage.getItem('botanical_journal')) || [];
+
+            grid.innerHTML = notes.length ? '' : '<p style="text-align:center; opacity:0.5;">The archive is empty.</p>';
+
+            notes.forEach(note => {
+                const card = document.createElement('div');
+                card.className = 'note-card';
+                card.onclick = () => openNote(note.id);
+                card.innerHTML = `
+                    <small style="color:var(--leaf-medium)">${note.date}</small>
+                    <h3 style="margin:5px 0; font-family:'Playfair Display'; color:var(--leaf-dark);">${note.title}</h3>
+                    <p style="color:#666; font-size:14px; margin:0; overflow:hidden; display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${note.content}</p>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Buka Catatan Lama
+        function openNote(id) {
+            const notes = JSON.parse(localStorage.getItem('botanical_journal')) || [];
+            const note = notes.find(n => n.id === id);
+            
+            currentNoteId = id;
+            document.getElementById('noteTitleInput').value = note.title;
+            document.getElementById('editorArea').value = note.content;
+            showSection('write');
+            
+            // Auto expand kertas sesuai isi
+            const tx = document.getElementById('editorArea');
+            tx.style.height = 'auto';
+            tx.style.height = (tx.scrollHeight) + 'px';
+        }
+
+        // Kertas Otomatis Memanjang
+        const tx = document.getElementById('editorArea');
+        tx.addEventListener("input", function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        }, false);
+
+        // Animasi Daun
+        function spawnLeaf() {
+            const container = document.getElementById('leafContainer');
+            const leaf = document.createElement('span');
+            leaf.className = 'leaf-fall';
+            leaf.innerText = ['🍃', '🌿', '🌱'][Math.floor(Math.random()*3)];
+            leaf.style.left = Math.random() * 100 + 'vw';
+            leaf.style.fontSize = Math.random() * 15 + 10 + 'px';
+            leaf.style.animationDuration = Math.random() * 5 + 5 + 's';
+            container.appendChild(leaf);
+            setTimeout(() => leaf.remove(), 10000);
+        }
+        setInterval(spawnLeaf, 800);
+    </script>
+</body>
+</html>
